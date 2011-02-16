@@ -1,0 +1,11 @@
+#
+#            IPTV.bg Streaming Script v1.0
+#
+#   Require:
+#   VLC     http://www.videolan.org/vlc/
+#   PHP 5.2 http://www.php.net/downloads.php
+#
+#   Required PHP extensions:
+#   PCRE
+#   CURL
+#
