@@ -24,21 +24,32 @@ unlink('cookie.txt');
 return preg_replace('/[^a-z0-9]/', '', $key[1]);
 }
 
+function get_ip(){
+    preg_match('/(\d{1,3}\.){3}\d{1,3}/', file_get_contents('http://ip1.dynupdate.no-ip.com/'), $wan_ip);
+
+return $wan_ip[0];
+}
+
 function check_ip(){
 global $cache_file;
 
-    preg_match('/(\d{1,3}\.){3}\d{1,3}/', file_get_contents('http://checkip.dyndns.com'), $wan_ip);
 
     if(file_exists($cache_file)) {
-        $fp = fopen($cache_file, "w+");
+
+
+       $fp=fopen($cache_file, 'r');
+
 
        preg_match('/(\d{1,3}\.){3}\d{1,3}/', fgets($fp), $cached_ip);
 
-       if($cached_ip[0]!=$wan_ip[0]){
 
-       fputs($fp, $wan_ip[0]);
+       if($cached_ip[0]!=get_ip()){
        
-       return $wan_ip[0];
+       $fpw = fopen($cache_file, "w+");
+       fputs($fpw, get_ip());
+       fclose($fpw);
+
+       return 1;
        }
 
 
@@ -46,47 +57,82 @@ global $cache_file;
 
         $fp = fopen($cache_file, "a+");
 
-        fputs($fp, $wan_ip[0]);
-        
-        return $wan_ip[0];
+        fputs($fp, get_ip());
+
+        return 1;
         }
 
 
    fclose($fp);
 
+
    return NULL;
 }
 
-function usage(){
-    global $progname;
-    $stderr = fopen("php://stderr", "w");
-    
-    fwrite($stderr, "Usage: $progname [option]
- Options:
-       -r, --reload       reload channel list
-       -c, --check        check ip
-       -h, --help         this help message
-");
-    fclose($stderr);
-}
-
 function reload(){
-global $stream;
+global $stream, $www, $ip;
 
 login();
 $sessid=sessid();
 $i=0;
-
-$fp=fopen('/usr/share/iptv/stream_list.sh', "w+");
-$fpp=fopen('/usr/share/iptv/example/stream_list.sh', 'r');
-fputs($fp, fread($fpp, filesize('/usr/share/iptv/example/stream_list.sh')));
-fclose($fpp);
-foreach($stream as $str)
-{
-    fputs($fp, "cvlc 'http://iptv.bg/asx/btc/".$str['quality']."/$sessid/".$str['name'].".asx' --sout '#standard{access=http,mux=asf,dst=$ip:80$i/".$str['name'].".asx}' &\n");
+$fp=fopen("stream_list.sh", "w+");
+unlink("playlist.asx");
+$playlist=fopen("playlist.asx", "w+");
+fputs($fp, "#!/bin/sh\n");
+fputs($playlist, '<ASX version = "3.0">');
+foreach($stream as $str){
+    fputs($fp, "cvlc 'http://iptv.bg/asx/btc/".$str['quality']."/$sessid/".$str['channel'].".asx' --sout '#standard{access=http,mux=asf,dst=$ip:80$i/".$str['channel']."}' --pidfile pid/80$i.pid -d\n");
+    fputs($playlist, '<ENTRY><TITLE>'.$str['name'].' - '.$organisation.'</TITLE><REF HREF = "http://'.$ip.':80'.$i.'/'.$str['channel'].'" /></ENTRY>');
     $i++;
 }
+fputs($playlist, '</ASX>');
+fclose($playlist);
 fclose($fp);
+chmod("stream_list.sh", 700);
+
+
 }
 
+function ports_check(){
+    global $stream, $ip;
+    $i=0;
+    $r=0;
+    $a=count($stream);
+    while($i <= $a--){
+    
+    if(@fsockopen($ip, "80".$i , $errno, $errstr, 5)){
+        $r++;
+    }
+
+    $i++;
+    }
+    if($i==$r){ return 1;  } else { return 0; }
+    
+};
+
+function kill_pids(){
+global $stream, $directory;
+$i=0;
+$a=count($stream);
+
+    while ($i <= $a--) {
+    if(file_exists("pid/80$i.pid")){
+
+    $fp=fopen("pid/80$i.pid", "r");
+    exec("kill -9 ".fread($fp, filesize("pid/80$i.pid")));
+    fclose($fp);
+    unlink("pid/80$i.pid");
+    }
+
+    $i++;
+    }
+
+}
+
+function beep ($int_beeps = 1) {
+for ($i = 0; $i < $int_beeps; $i++){ $beep.="\x07";
+print $beep;}
+}
+
+        
 ?>

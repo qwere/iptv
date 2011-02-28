@@ -5,11 +5,15 @@ $password="";
 //Streamer IP
 $ip="0.0.0.0";
 //Stream channels
-$stream[]=array("name" => "kanal1", "quality" => "high");
-$stream[]=array("name" => "btv", "quality" => "high");
-$stream[]=array("name" => "gtv", "quality" => "high");
-$stream[]=array("name" => "tv7", "quality" => "high");
-
+$stream[]=array("name" => "BNT", "channel" => "kanal1", "quality" => "low");
+//$stream[]=array("name" => "BTV", "channel" => "btv", "quality" => "low");
+//$stream[]=array("name" => "BTV Action", "channel" => "tv2", "quality" => "low");
+//$stream[]=array("name" => "BTV Comedy", "channel" => "gtv", "quality" => "low");
+//$stream[]=array("name" => "TV7", "channel" => "tv7", "quality" => "low");
+//$stream[]=array("name" => "City", "channel" => "citytv", "quality" => "low");
 //IP cache
 $cache_file="/tmp/cached_ip";
+//organisation
+$www="example.org";
+
 ?>
